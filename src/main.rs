@@ -1,5 +1,6 @@
 use vm1::isa::*;
-use vm1::interpreter::*;
+use vm1::interpreter::Interpreter;
+use vm1::raylib_run;
 
 fn main() {
     let code = vec![
@@ -10,5 +11,6 @@ fn main() {
         Instruction::Print {addr: Addr {addr: 1}}
     ];
 
-    interpret(&code);
+    let vm = Interpreter::new(&code);
+    raylib_run::run(&vm);
 }

@@ -1,21 +1,42 @@
 use crate::machine::*;
 use crate::isa::*;
 
-pub fn interpret(rom: &Vec<Instruction>) {
-    let mut code_ptr: u16 = 0;
-    let mut ram = Ram::new();
-    let mut registry = Registry::new();
+pub struct Interpreter<'a> {
+    rom: &'a Vec<Instruction>,
+    ram: Ram,
+    registry: Registry,
+    code_ptr: u16,
+}
 
-    while code_ptr < (rom.len() as u16) {
-        let ret = interp_instr(rom[code_ptr as usize], &mut ram, &mut registry);
-        code_ptr = match ret {
-            None => code_ptr + 1,
+impl<'a> Interpreter<'a> {
+    pub fn interpret(&mut self) {
+        while self.code_ptr < (self.rom.len() as u16) {
+            self.interpret_one();
+        }
+    }
+
+    //returns false when end of ROM is reached.
+    pub fn interpret_one(&mut self) -> bool {
+        if self.code_ptr >= self.rom.len() as u16 { return false; }
+        let ret = interp_instr(self.rom[self.code_ptr as usize], &mut self.ram, &mut self.registry);
+        self.code_ptr = match ret {
+            None => self.code_ptr + 1,
             Some(addr) => addr,
         };
+        true
+    }
+
+    pub fn new(code: &'a Vec<Instruction>) -> Interpreter {
+        Interpreter {
+            rom: code,
+            ram: Ram::new(),
+            registry: Registry::new(),
+            code_ptr: 0,
+        }
     }
 }
 
-pub fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> Option<u16> {
+fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> Option<u16> {
     let mut ret: Option<u16> = None;
     match inst {
         Instruction::Add {a, b} => {
