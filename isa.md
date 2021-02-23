@@ -3,7 +3,6 @@ reg: a register. 0-256 i guess.
 addr: a 16 bit address.
 caddr: a 16 bit code address. differentiated since code is stored in ROM
 
-**NEEDS UPDATING**
 
 | code | op | description |
 | ---- | -  | ----------- |
@@ -20,3 +19,4 @@ caddr: a 16 bit code address. differentiated since code is stored in ROM
 | 10   | jgt reg reg caddr | jump if reg > reg |
 | 11   | jlt reg reg caddr | jump if reg < reg |
 | 12   | print addr | print? |
+| 13   | set reg val | set a register to a literal value |
