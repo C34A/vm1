@@ -4,7 +4,7 @@ use crate::machine::val_to_char;
 
 pub fn run(machine: &mut Interpreter) {    
     let (mut rl, thread) = raylib::init()
-        .size(800, 800)
+        .size(845, 970)
         .title("VM1")
         .build();
 
@@ -29,7 +29,7 @@ pub fn run(machine: &mut Interpreter) {
             d.draw_text_ex(&font, &text[..], Vector2::zero(), 16.0, 0.0, Color::WHITE);
         }
 
-        if !not_done {break;}
+        // if !not_done {break;} //uncomment this to not pause at end
     }
 }
 

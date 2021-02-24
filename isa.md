@@ -25,3 +25,4 @@ caddr: a 15 bit code address. differentiated since code is stored in ROM by top 
 | 16 | print addr | debug print? |
 | 17 | print reg | debug print |
 | 18 | set reg val | set a register to a literal value |
+| 19 | draw | draw and update input |

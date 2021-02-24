@@ -1,19 +1,20 @@
 
-#[derive(Copy, Clone)]pub struct RegAddr {
+#[derive(Copy, Clone, Debug)]
+pub struct RegAddr {
     pub idx: u8
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Addr {
     pub addr: u16
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct CAddr {
     pub caddr: u16
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Instruction {
     None,
     Set {reg: RegAddr, val: i32},
