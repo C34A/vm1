@@ -34,4 +34,5 @@ pub enum Instruction {
     Jlt {a: RegAddr, b: RegAddr, addr: CAddr},
     Print {addr: Addr},
     PrintR {reg: RegAddr},
+    Draw,
 }

@@ -16,14 +16,14 @@ impl<'a> Interpreter<'a> {
     }
 
     //returns false when end of ROM is reached.
-    pub fn interpret_one(&mut self) -> bool {
-        if self.code_ptr >= self.rom.len() as u16 { return false; }
-        let ret = interp_instr(self.rom[self.code_ptr as usize], &mut self.ram, &mut self.registry);
-        self.code_ptr = match ret {
+    pub fn interpret_one(&mut self) -> (bool, bool) {
+        if self.code_ptr >= self.rom.len() as u16 { return (false, true); }
+        let (new_ptr, draw) = interp_instr(self.rom[self.code_ptr as usize], &mut self.ram, &mut self.registry);
+        self.code_ptr = match new_ptr {
             None => self.code_ptr + 1,
             Some(addr) => addr,
         };
-        true
+        (true, draw)
     }
 
     pub fn new(code: &'a Vec<Instruction>) -> Interpreter {
@@ -40,8 +40,9 @@ impl<'a> Interpreter<'a> {
     }
 }
 
-fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> Option<u16> {
+fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> (Option<u16>, bool) {
     let mut ret: Option<u16> = None;
+    let mut draw = false;
     match inst {
         Instruction::Add {a, b} => {
             let a_val = registry.get(a.idx);
@@ -111,9 +112,7 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> Op
         Instruction::Jlt {a, b, addr} => {
             let a_val = registry.get(a.idx);
             let b_val = registry.get(b.idx);
-            println!("a val: {} b val: {}", a_val.contents, b_val.contents);
             if a_val.contents < b_val.contents {
-                println!("less than!");
                 ret = Some(addr.caddr);
             }
         },
@@ -126,7 +125,8 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> Op
         Instruction::PrintR {reg} => {
             println!("{}", registry.get(reg.idx).contents);
         },
+        Instruction::Draw => {draw = true;}
         Instruction::None => {},
     };
-    ret
+    (ret, draw)
 }

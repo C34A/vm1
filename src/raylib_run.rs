@@ -15,14 +15,31 @@ pub fn run(machine: &mut Interpreter) {
 
     while !rl.window_should_close() {
 
-        machine.interpret_one();
+        let (not_done, draw) = machine.interpret_one();
 
-        let mut d = rl.begin_drawing(&thread);
+        if draw {
+            let mut d = rl.begin_drawing(&thread);
 
-        d.clear_background(Color::BLACK);
-        // d.draw_text_ex(&font, &text[..], Vector2::zero(), 14.0, 0.0, Color::WHITE);
-        for (i, x) in machine.get_framebuffer().iter().enumerate() {
-            d.draw_text_ex(&font, &val_to_char(*x).to_string()[..], Vector2::new((i % 40) as f32 * 20.0, (i / 40) as f32 * 20.0), 14.0, 0.0, Color::WHITE);
+            d.clear_background(Color::BLACK);
+            // d.draw_text_ex(&font, &text[..], Vector2::zero(), 14.0, 0.0, Color::WHITE);
+            // for (i, x) in machine.get_framebuffer().iter().enumerate() {
+            //     d.draw_text_ex(&font, &val_to_char(*x).to_string()[..], Vector2::new((i % 40) as f32 * 20.0, (i / 40) as f32 * 20.0), 14.0, 0.0, Color::WHITE);
+            // }
+            let text = framebuffer_to_str(machine.get_framebuffer());
+            d.draw_text_ex(&font, &text[..], Vector2::zero(), 16.0, 0.0, Color::WHITE);
         }
+
+        if !not_done {break;}
     }
+}
+
+fn framebuffer_to_str(fb: &[i32]) -> String {
+    let mut ret = String::new();
+    for i in 0..40 {
+        for j in 0..40 {
+            ret.push(val_to_char(fb[40*i + j]));
+        }
+        ret.push('\n');
+    }
+    ret
 }

@@ -11,7 +11,8 @@ fn main() {
         Instruction::Set {reg: RegAddr {idx: 2}, val: 32767},
         Instruction::StoreDeref {dreg: RegAddr {idx: 0}, areg: RegAddr {idx: 1}},
         Instruction::Inc {reg: RegAddr {idx: 1}, val: 1},
-        Instruction::Jlt {a: RegAddr {idx: 1}, b: RegAddr {idx: 2}, addr: CAddr {caddr: 5}}
+        Instruction::Jlt {a: RegAddr {idx: 1}, b: RegAddr {idx: 2}, addr: CAddr {caddr: 5}},
+        Instruction::Draw,
     ];
 
     let mut vm = Interpreter::new(&code);
