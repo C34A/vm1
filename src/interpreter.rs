@@ -34,6 +34,10 @@ impl<'a> Interpreter<'a> {
             code_ptr: 0,
         }
     }
+
+    pub fn get_framebuffer(&self) -> &[i32] {
+        self.ram.get_framebuffer()
+    }
 }
 
 fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> Option<u16> {
@@ -48,6 +52,14 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> Op
             let a_val = registry.get(a.idx);
             let b_val = registry.get(b.idx);
             registry.put(a.idx, Val::from(a_val.contents - b_val.contents));
+        },
+        Instruction::Inc {reg, val} => {
+            let before = registry.get(reg.idx);
+            registry.put(reg.idx, Val{contents: before.contents + val});
+        },
+        Instruction::Dec {reg, val} => {
+            let before = registry.get(reg.idx);
+            registry.put(reg.idx, Val{contents: before.contents - val});
         },
         Instruction::Div {a, b} => {
             let a_val = registry.get(a.idx);
@@ -67,8 +79,17 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> Op
         Instruction::Load {addr, reg} => {
             registry.put(reg.idx, ram.load(addr.addr));
         },
+        Instruction::LoadDeref {areg, dreg} => {
+            let add = registry.get(areg.idx);
+            registry.put(dreg.idx, ram.load(add.contents as u16));
+        },
         Instruction::Store {reg, addr} => {
             ram.store(addr.addr, registry.get(reg.idx));
+        },
+        Instruction::StoreDeref {dreg, areg} => {
+            let dat = registry.get(dreg.idx);
+            let address = registry.get(areg.idx);
+            ram.store(address.contents as u16, dat);
         },
         Instruction::Jmp {addr} => {
             ret = Some(addr.caddr);
@@ -90,7 +111,9 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> Op
         Instruction::Jlt {a, b, addr} => {
             let a_val = registry.get(a.idx);
             let b_val = registry.get(b.idx);
+            println!("a val: {} b val: {}", a_val.contents, b_val.contents);
             if a_val.contents < b_val.contents {
+                println!("less than!");
                 ret = Some(addr.caddr);
             }
         },
@@ -99,7 +122,10 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> Op
         },
         Instruction::Set {reg, val} => {
             registry.put(reg.idx, Val::from(val));
-        }
+        },
+        Instruction::PrintR {reg} => {
+            println!("{}", registry.get(reg.idx).contents);
+        },
         Instruction::None => {},
     };
     ret
