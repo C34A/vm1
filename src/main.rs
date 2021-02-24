@@ -1,10 +1,13 @@
+use std::env;
+use std::fs;
+
 use vm1::isa::*;
 use vm1::interpreter::Interpreter;
 use vm1::raylib_run;
 
 use vm1::assembler;
 
-fn main() {
+fn main() -> Result<(), String>{
     // let code1 = vec![
     //     Instruction::Set {reg: RegAddr {idx: 0}, val: 1},
     //     Instruction::Inc {reg: RegAddr {idx: 0}, val: 64},
@@ -17,24 +20,47 @@ fn main() {
     //     Instruction::Draw,
     // ];
 
-    let codestr = String::from("set r0 1
-                                inc r0 64
-                                store r0 1
-                                set r1 31167
-                                set r2 32767
-                                set r4 91
-                                store r0 r1
-                                inc  r1 1
-                                inc r0 1
-                                jlt r0 r4 11
-                                set r0 65
-                                jlt r1 r2 6
-                                draw
-                                ");
+    // let codestr = String::from("set r0 1
+    //                             inc r0 64
+    //                             store r0 1
+    //                             set r1 31167
+    //                             set r2 32767
+    //                             set r4 91
+    //                             store r0 r1
+    //                             inc  r1 1
+    //                             inc r0 1
+    //                             jlt r0 r4 11
+    //                             set r0 65
+    //                             jlt r1 r2 6
+    //                             draw
+    //                             ");
+    let args: Vec<String> = env::args().collect();
 
-    let code = assembler::gen_code(&codestr);
+    println!("{:?}",args);
 
+    match args.get(1) {
+        None => {
+            return Err(String::from("no arguments given."))
+        },
+        Some(s) => {
+            match &s[..] {
+                "compilerun" => {
+                    let filename = args.get(2).expect("expected filename in 3rd argument");
+                    let file = fs::File::open(filename).expect(&format!("failed to read file: {}", filename)[..]);
+                    let code = assembler::gen_code_read(file);
+                    run(&code);
+                },
+                _ => {
+                    return Err(format!("unrecognized argument: {}", s));
+                }
+            }
+        }
+    }
 
-    let mut vm = Interpreter::new(&code);
+    Ok(())
+}
+
+fn run(code: &Vec<Instruction>) {
+    let mut vm = Interpreter::new(code);
     raylib_run::run(&mut vm);
 }
