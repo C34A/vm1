@@ -1,39 +1,25 @@
 
-#[derive(Copy, Clone, Debug)]
-pub struct RegAddr {
-    pub idx: u8
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct Addr {
-    pub addr: u16
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct CAddr {
-    pub caddr: u16
-}
 
 #[derive(Copy, Clone, Debug)]
 pub enum Instruction {
     None,
-    Set {reg: RegAddr, val: i32},
-    Add {a: RegAddr, b: RegAddr},
-    Sub {a: RegAddr, b: RegAddr},
-    Inc {reg: RegAddr, val: i32},
-    Dec {reg: RegAddr, val: i32},
-    Mult {a: RegAddr, b: RegAddr},
-    Div {a: RegAddr, b: RegAddr},
-    Rem {a: RegAddr, b: RegAddr},
-    Load {addr: Addr, reg: RegAddr},
-    LoadDeref {areg: RegAddr, dreg: RegAddr},
-    Store {reg: RegAddr, addr: Addr},
-    StoreDeref {dreg: RegAddr, areg: RegAddr},
-    Jmp {addr: CAddr},
-    Jeq {a: RegAddr, b: RegAddr, addr: CAddr},
-    Jgt {a: RegAddr, b: RegAddr, addr: CAddr},
-    Jlt {a: RegAddr, b: RegAddr, addr: CAddr},
-    Print {addr: Addr},
-    PrintR {reg: RegAddr},
+    Set {reg: u8, val: i32},
+    Add {rega: u8, regb: u8},
+    Sub {rega: u8, regb: u8},
+    Inc {reg: u8, val: i32},
+    Dec {reg: u8, val: i32},
+    Mult {rega: u8, regb: u8},
+    Div {rega: u8, regb: u8},
+    Rem {rega: u8, regb: u8},
+    Load {addr: u16, reg: u8},
+    LoadDeref {addr_reg: u8, data_reg: u8},
+    Store {reg: u8, addr: u16},
+    StoreDeref {data_reg: u8, addr_reg: u8},
+    Jmp {addr: u16},
+    Jeq {rega: u8, regb: u8, addr: u16},
+    Jgt {rega: u8, regb: u8, addr: u16},
+    Jlt {rega: u8, regb: u8, addr: u16},
+    Print {addr: u16},
+    PrintR {reg: u8},
     Draw,
 }
