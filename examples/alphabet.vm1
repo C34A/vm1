@@ -4,7 +4,7 @@ store r0 1
 set r1 31167
 set r2 32767
 set r4 91
-store r0 r1
+store r0 @r1
 inc  r1 1
 inc r0 1
 jlt r0 r4 11
