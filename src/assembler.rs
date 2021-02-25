@@ -1,270 +1,224 @@
 use std::io::Read;
 
-use crate::isa::*;
+use std::collections::HashMap;
 
-pub fn gen_code_read(mut text: impl Read) -> Vec<Instruction> {
+use crate::isa::*;
+use crate::tokenizer::*;
+
+pub fn gen_code_read(mut text: impl Read) -> Result<Vec<Instruction>, String> {
     let mut textstr = String::new();
-    text.read_to_string(&mut textstr);
+    let _ = text.read_to_string(&mut textstr);
     gen_code(&textstr)
 }
 
-pub fn gen_code(mut text: &String) -> Vec<Instruction> {
+pub fn gen_code(text: &String) -> Result<Vec<Instruction>, String> {
+    let tokens = tokenize(text);
+    compile(&tokens)
+}
 
-    let mut ret = vec![];
-
-    for line in text.split('\n') {
-        let (trim, _) = match line.find(';') {
-            None => (line, ""),
-            Some(idx) => line.split_at(idx),
-        };
-
-        let mut iter = trim.split_ascii_whitespace();
-        let instr = iter.next();
-        match instr {
-            None => {continue;},
-            Some(s) => match s {
-                "nop" => {ret.push(Instruction::None);},
-                "set" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let val = parse_val(iter.next().unwrap());
-                    ret.push(
-                        Instruction::Set {
-                            reg: RegAddr {idx: reg1},
-                            val: val
-                        }
-                    )
+pub fn compile(tokens: &Vec<Token>) -> Result<Vec<Instruction>, String> {
+    let mut label_map: HashMap<String, u16> = HashMap::new();
+    for (idx, token) in tokens.iter().enumerate() {
+        match token {
+            Token::Label(name) => {
+                if label_map.contains_key(name) {
+                    return Err(format!("ERROR: label {} defined multiple times.", name));
+                } else {
+                    label_map.insert(String::from(name) , idx as u16);
                 }
-                "add" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let reg2 = get_register_or_panic(iter.next().unwrap());
-                    ret.push(
-                        Instruction::Add{
-                            a: RegAddr {idx: reg1},
-                            b: RegAddr {idx: reg2}
-                        }
-                    );
+            },
+            _ => ()
+            // {
+            //     return Err(format!("ERROR: unexpected token (label): {:?}", token));
+            // },
+        }
+    }
+
+    let mut ret: Vec<Instruction> = vec![];
+
+    for token in tokens {
+        match token {
+            Token::Label(_) => {
+                ret.push(Instruction::None);
+            },
+            Token::Instr(instr, args) => {
+                ret.push(compile_instr(&instr, &args)?)
+            },
+            _ => return Err(format!("ERROR: unexpected token {:?}", token)),
+        }
+    }
+
+    Ok(ret)
+}
+
+fn compile_instr(inst_name: &String, args: &Vec<Token>) -> Result<Instruction, String> {
+    match &inst_name[..] {
+        "nop" => Ok(Instruction::None),
+        "set" => {
+            let reg = try_get_reg(args.get(0))?;
+            let val = try_get_lit(args.get(1))?;
+            Ok(Instruction::Set {reg: reg, val: val})
+        },
+        "add" => {
+            let rega = try_get_reg(args.get(0))?;
+            let regb = try_get_reg(args.get(1))?;
+            Ok(Instruction::Add {rega: rega, regb: regb})
+        },
+        "sub" => {
+            let rega = try_get_reg(args.get(0))?;
+            let regb = try_get_reg(args.get(1))?;
+            Ok(Instruction::Sub {rega: rega, regb: regb})
+        },
+        "mult" => {
+            let rega = try_get_reg(args.get(0))?;
+            let regb = try_get_reg(args.get(1))?;
+            Ok(Instruction::Mult {rega: rega, regb: regb})
+        },
+        "div" => {
+            let rega = try_get_reg(args.get(0))?;
+            let regb = try_get_reg(args.get(1))?;
+            Ok(Instruction::Div {rega: rega, regb: regb})
+        },
+        "rem" => {
+            let rega = try_get_reg(args.get(0))?;
+            let regb = try_get_reg(args.get(1))?;
+            Ok(Instruction::Rem {rega: rega, regb: regb})
+        },
+        "inc" => {
+            let reg = try_get_reg(args.get(0))?;
+            let val = try_get_lit(args.get(1))?;
+            Ok(Instruction::Inc {reg: reg, val: val})
+        },
+        "dec" => {
+            let reg = try_get_reg(args.get(0))?;
+            let val = try_get_lit(args.get(1))?;
+            Ok(Instruction::Dec {reg: reg, val: val})
+        },
+        "load" => {
+            let first = args.get(0);
+            let maybe_addr_reg = try_get_addr_reg(first);
+            let data_reg = try_get_reg(args.get(1))?;
+            match maybe_addr_reg {
+                Ok(reg) => {
+                    Ok(Instruction::LoadDeref {addr_reg: reg, data_reg: data_reg})
                 },
-                "sub" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let reg2 = get_register_or_panic(iter.next().unwrap());
-                    ret.push(
-                        Instruction::Sub {
-                            a: RegAddr {idx: reg1},
-                            b: RegAddr {idx: reg2}
+                Err(_) => {
+                    let maybe_addr = try_get_addr_lit(first);
+                    match maybe_addr {
+                        Ok(addr) => {
+                            Ok(Instruction::Load {addr: addr, reg: data_reg})
                         }
-                    );
-                },
-                "mult" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let reg2 = get_register_or_panic(iter.next().unwrap());
-                    ret.push(
-                        Instruction::Mult {
-                            a: RegAddr {idx: reg1},
-                            b: RegAddr {idx: reg2}
-                        }
-                    );
-                },
-                "div" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let reg2 = get_register_or_panic(iter.next().unwrap());
-                    ret.push(
-                        Instruction::Div {
-                            a: RegAddr {idx: reg1},
-                            b: RegAddr {idx: reg2}
-                        }
-                    );
-                },
-                "rem" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let reg2 = get_register_or_panic(iter.next().unwrap());
-                    ret.push(
-                        Instruction::Rem {
-                            a: RegAddr {idx: reg1},
-                            b: RegAddr {idx: reg2}
-                        }
-                    );
-                },
-                "inc" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let val = parse_val(iter.next().unwrap());
-                    ret.push(
-                        Instruction::Inc {
-                            reg: RegAddr {idx: reg1},
-                            val: val,
-                        }
-                    );
-                },
-                "dec" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let val = parse_val(iter.next().unwrap());
-                    ret.push(
-                        Instruction::Dec {
-                            reg: RegAddr {idx: reg1},
-                            val: val,
-                        }
-                    );
-                },
-                "load" => {
-                    let thing1 = iter.next().unwrap();
-                    match get_register(thing1) {
-                        Some(reg) => {
-                            let thing2 = get_register_or_panic(iter.next().unwrap());
-                            ret.push(
-                                Instruction::LoadDeref {
-                                    areg: RegAddr {idx: reg},
-                                    dreg: RegAddr {idx: thing2}
-                                }
-                            );
-                        },
-                        None => {
-                            let addr = parse_val(thing1) as u16;
-                            let thing2 = get_register_or_panic(iter.next().unwrap());
-                            ret.push(
-                                Instruction::Load {
-                                    addr: Addr {addr: addr},
-                                    reg: RegAddr {idx: thing2}
-                                }
-                            );
+                        Err(_) => {
+                            Err(String::from("ERROR: load - expected address or @register"))
                         }
                     }
+                }
+            }
+        },
+        "store" => {
+            let data_reg = try_get_reg(args.get(0))?;
+            let second = args.get(1);
+            let maybe_addr_reg = try_get_addr_reg(second);
+            match maybe_addr_reg {
+                Ok(reg) => {
+                    Ok(Instruction::StoreDeref {addr_reg: reg, data_reg: data_reg})
                 },
-                "store" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let thing2 = iter.next().unwrap();
-                    match get_register(thing2) {
-                        Some(reg) => {
-                            let reg2 = get_register(thing2).expect(&format!("failed to get register: {}", line)[..]);
-                            ret.push(
-                                Instruction::StoreDeref {
-                                    dreg: RegAddr {idx: reg1},
-                                    areg: RegAddr {idx: reg2}
-                                }
-                            );
-                        },
-                        None => {
-                            let addr = parse_val(thing2) as u16;
-                            ret.push(
-                                Instruction::Store {
-                                    addr: Addr {addr: addr},
-                                    reg: RegAddr {idx: reg1}
-                                }
-                            );
+                Err(_) => {
+                    let maybe_addr = try_get_addr_lit(second);
+                    match maybe_addr {
+                        Ok(addr) => {
+                            Ok(Instruction::Store {addr: addr, reg: data_reg})
+                        }
+                        Err(_) => {
+                            Err(String::from("ERROR: store - expected address or @register"))
                         }
                     }
-                },
-                "jmp" => {
-                    let addr = parse_caddr_or_panic(iter.next().unwrap(), line);
-                    ret.push(
-                        Instruction::Jmp {
-                            addr: addr
-                        }
-                    );
-                },
-                "jeq" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let reg2 = get_register_or_panic(iter.next().unwrap());
-                    let addr = parse_caddr_or_panic(iter.next().unwrap(), line);
-                    ret.push(
-                        Instruction::Jeq {
-                            a: RegAddr {idx: reg1},
-                            b: RegAddr {idx: reg2},
-                            addr: addr
-                        }
-                    );
-                },
-                "jgt" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let reg2 = get_register_or_panic(iter.next().unwrap());
-                    let addr = parse_caddr_or_panic(iter.next().unwrap(), line);
-                    ret.push(
-                        Instruction::Jgt {
-                            a: RegAddr {idx: reg1},
-                            b: RegAddr {idx: reg2},
-                            addr: addr
-                        }
-                    );
-                },
-                "jlt" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    let reg2 = get_register_or_panic(iter.next().unwrap());
-                    let addr = parse_caddr_or_panic(iter.next().unwrap(), line);
-                    ret.push(
-                        Instruction::Jlt {
-                            a: RegAddr {idx: reg1},
-                            b: RegAddr {idx: reg2},
-                            addr: addr
-                        }
-                    );
-                },
-                "print" => {
-                    let addr = parse_addr_or_panic(iter.next().unwrap(), line);
-                    ret.push(
-                        Instruction::Print {
-                            addr: addr
-                        }
-                    );
-                },
-                "printr" => {
-                    let reg1 = get_register_or_panic(iter.next().unwrap());
-                    ret.push(
-                        Instruction::PrintR {
-                            reg: RegAddr {idx: reg1}
-                        }
-                    );
                 }
-                "draw" => {
-                    ret.push(Instruction::Draw);
+            }
+        },
+        "jmp" => {
+            let addr = try_get_addr_lit(args.get(0))?;
+            Ok(Instruction::Jmp {addr: addr})
+        },
+        "jeq" => {
+            let rega = try_get_reg(args.get(0))?;
+            let regb = try_get_reg(args.get(1))?;
+            let addr = try_get_addr_lit(args.get(2))?;
+            Ok(Instruction::Jeq {rega: rega, regb: regb, addr: addr})
+        },
+        "jgt" => {
+            let rega = try_get_reg(args.get(0))?;
+            let regb = try_get_reg(args.get(1))?;
+            let addr = try_get_addr_lit(args.get(2))?;
+            Ok(Instruction::Jgt {rega: rega, regb: regb, addr: addr})
+        },
+        "jlt" => {
+            let rega = try_get_reg(args.get(0))?;
+            let regb = try_get_reg(args.get(1))?;
+            let addr = try_get_addr_lit(args.get(2))?;
+            Ok(Instruction::Jlt {rega: rega, regb: regb, addr: addr})
+        },
+        "print" => {
+            let first = args.get(0);
+            match try_get_addr_lit(first) {
+                Ok(addr) => Ok(Instruction::Print {addr: addr}),
+                Err(_) => match try_get_reg(first) {
+                    Ok(reg) => Ok(Instruction::PrintR {reg: reg}),
+                    Err(_) => {
+                        Err(String::from("ERROR: print expected register or address"))
+                    }
                 }
-                _ => {panic!("syntax error: {}", line);}
             }
-        }
-    }
-
-    ret
-}
-
-fn parse_val(text: &str) -> i32 {
-    text.parse::<i32>().expect("failed to parse int val")
-}
-
-fn get_register_or_panic(text: &str) -> u8 {
-    let (first, rest) = text.split_at(1);
-    if first.as_bytes()[0] as char != 'r' {
-        panic!("syntax error- expected register: {}", text);
-    } else {
-        rest.parse::<u8>().expect("failed to parse register")
+        },
+        "draw" => Ok(Instruction::Draw),
+        _ => Err(format!("ERROR: instruction not recognized: {}", inst_name))
     }
 }
 
-fn get_register(text: &str) -> Option<u8> {
-    let (first, rest) = text.split_at(1);
-    if first.as_bytes()[0] as char != 'r' {
-        None
-    } else {
-        Some(rest.parse::<u8>().expect("failed to parse register"))
+fn try_get_reg(maybe_token: Option<&Token>) -> Result<u8, String> {
+    match maybe_token {
+        None => return Err(String::from("ERROR: not enough args, expected register")),
+        Some(tok) => {
+            match *tok {
+                Token::Reg(idx) => Ok(idx),
+                _ => return Err(format!("ERROR: expected register, found {:?}", tok)),
+            }
+        }
     }
 }
 
-fn parse_caddr_or_panic(text: &str, line: &str) -> CAddr {
-    let maybe_addr = text.parse::<u16>();
-        match maybe_addr {
-            Ok(addr) => {
-                CAddr {caddr: addr}
-            },
-            Err(e) => {
-                panic!("syntax error- expected code address: {}\n{}", line, e);
+fn try_get_addr_reg(maybe_token: Option<&Token>) -> Result<u8, String> {
+    match maybe_token {
+        None => return Err(String::from("ERROR: not enough args, expected @register")),
+        Some(tok) => {
+            match *tok {
+                Token::AtReg(idx) => Ok(idx),
+                _ => return Err(format!("ERROR: expected @register, found {:?}", tok)),
             }
         }
+    }
 }
 
-fn parse_addr_or_panic(text: &str, line: &str) -> Addr {
-    let maybe_addr = text.parse::<u16>();
-        match maybe_addr {
-            Ok(addr) => {
-               Addr {addr: addr}
-            },
-            Err(e) => {
-                panic!("syntax error- expected code address: {}\n{}", line, e);
+fn try_get_lit(maybe_token: Option<&Token>) -> Result<i32, String> {
+    match maybe_token {
+        None => return Err(String::from("ERROR: not enough args, expected address")),
+        Some(tok) => {
+            match *tok {
+                Token::Literal(val) => Ok(val),
+                _ => return Err(format!("ERROR: expected literal, found {:?}", tok)),
             }
         }
+    }
+}
+
+fn try_get_addr_lit(maybe_token: Option<&Token>) -> Result<u16, String> {
+    match maybe_token {
+        None => return Err(String::from("ERROR: not enough args, expected address")),
+        Some(tok) => {
+            match *tok {
+                Token::AtLiteral(addr) => Ok(addr),
+                _ => return Err(format!("ERROR: expected @register, found {:?}", tok)),
+            }
+        }
+    }
 }

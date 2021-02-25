@@ -44,86 +44,86 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> (O
     let mut ret: Option<u16> = None;
     let mut draw = false;
     match inst {
-        Instruction::Add {a, b} => {
-            let a_val = registry.get(a.idx);
-            let b_val = registry.get(b.idx);
-            registry.put(a.idx, Val::from(a_val.contents + b_val.contents));
+        Instruction::Add {rega, regb} => {
+            let a_val = registry.get(rega);
+            let b_val = registry.get(regb);
+            registry.put(rega, Val::from(a_val.contents + b_val.contents));
         },
-        Instruction::Sub {a, b} => {
-            let a_val = registry.get(a.idx);
-            let b_val = registry.get(b.idx);
-            registry.put(a.idx, Val::from(a_val.contents - b_val.contents));
+        Instruction::Sub {rega, regb} => {
+            let a_val = registry.get(rega);
+            let b_val = registry.get(regb);
+            registry.put(rega, Val::from(a_val.contents - b_val.contents));
         },
         Instruction::Inc {reg, val} => {
-            let before = registry.get(reg.idx);
-            registry.put(reg.idx, Val{contents: before.contents + val});
+            let before = registry.get(reg);
+            registry.put(reg, Val{contents: before.contents + val});
         },
         Instruction::Dec {reg, val} => {
-            let before = registry.get(reg.idx);
-            registry.put(reg.idx, Val{contents: before.contents - val});
+            let before = registry.get(reg);
+            registry.put(reg, Val{contents: before.contents - val});
         },
-        Instruction::Div {a, b} => {
-            let a_val = registry.get(a.idx);
-            let b_val = registry.get(b.idx);
-            registry.put(a.idx, Val::from(a_val.contents / b_val.contents));
+        Instruction::Div {rega, regb} => {
+            let a_val = registry.get(rega);
+            let b_val = registry.get(regb);
+            registry.put(rega, Val::from(a_val.contents / b_val.contents));
         },
-        Instruction::Mult {a, b} => {
-            let a_val = registry.get(a.idx);
-            let b_val = registry.get(b.idx);
-            registry.put(a.idx, Val::from(a_val.contents * b_val.contents));
+        Instruction::Mult {rega, regb} => {
+            let a_val = registry.get(rega);
+            let b_val = registry.get(regb);
+            registry.put(rega, Val::from(a_val.contents * b_val.contents));
         },
-        Instruction::Rem {a, b} => {
-            let a_val = registry.get(a.idx);
-            let b_val = registry.get(b.idx);
-            registry.put(a.idx, Val::from(a_val.contents % b_val.contents));
+        Instruction::Rem {rega, regb} => {
+            let a_val = registry.get(rega);
+            let b_val = registry.get(regb);
+            registry.put(rega, Val::from(a_val.contents % b_val.contents));
         },
         Instruction::Load {addr, reg} => {
-            registry.put(reg.idx, ram.load(addr.addr));
+            registry.put(reg, ram.load(addr));
         },
-        Instruction::LoadDeref {areg, dreg} => {
-            let add = registry.get(areg.idx);
-            registry.put(dreg.idx, ram.load(add.contents as u16));
+        Instruction::LoadDeref {addr_reg, data_reg} => {
+            let add = registry.get(addr_reg);
+            registry.put(data_reg, ram.load(add.contents as u16));
         },
         Instruction::Store {reg, addr} => {
-            ram.store(addr.addr, registry.get(reg.idx));
+            ram.store(addr, registry.get(reg));
         },
-        Instruction::StoreDeref {dreg, areg} => {
-            let dat = registry.get(dreg.idx);
-            let address = registry.get(areg.idx);
+        Instruction::StoreDeref {data_reg, addr_reg} => {
+            let dat = registry.get(data_reg);
+            let address = registry.get(addr_reg);
             ram.store(address.contents as u16, dat);
         },
         Instruction::Jmp {addr} => {
-            ret = Some(addr.caddr);
+            ret = Some(addr);
         },
-        Instruction::Jeq {a, b, addr} => {
-            let a_val = registry.get(a.idx);
-            let b_val = registry.get(b.idx);
+        Instruction::Jeq {rega, regb, addr} => {
+            let a_val = registry.get(rega);
+            let b_val = registry.get(regb);
             if a_val.contents == b_val.contents {
-                ret = Some(addr.caddr);
+                ret = Some(addr);
             }
         },
-        Instruction::Jgt {a, b, addr} => {
-            let a_val = registry.get(a.idx);
-            let b_val = registry.get(b.idx);
+        Instruction::Jgt {rega, regb, addr} => {
+            let a_val = registry.get(rega);
+            let b_val = registry.get(regb);
             if a_val.contents > b_val.contents {
-                ret = Some(addr.caddr);
+                ret = Some(addr);
             }
         },
-        Instruction::Jlt {a, b, addr} => {
-            let a_val = registry.get(a.idx);
-            let b_val = registry.get(b.idx);
+        Instruction::Jlt {rega, regb, addr} => {
+            let a_val = registry.get(rega);
+            let b_val = registry.get(regb);
             if a_val.contents < b_val.contents {
-                ret = Some(addr.caddr);
+                ret = Some(addr);
             }
         },
         Instruction::Print {addr} => {
-            println!("{}", ram.load(addr.addr).contents);
+            println!("{}", ram.load(addr).contents);
         },
         Instruction::Set {reg, val} => {
-            registry.put(reg.idx, Val::from(val));
+            registry.put(reg, Val::from(val));
         },
         Instruction::PrintR {reg} => {
-            println!("{}", registry.get(reg.idx).contents);
+            println!("{}", registry.get(reg).contents);
         },
         Instruction::Draw => {draw = true;}
         Instruction::None => {},

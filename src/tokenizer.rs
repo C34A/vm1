@@ -9,7 +9,7 @@ pub enum Token {
     AtLiteral(u16),
 }
 
-pub fn tokenize(mut text: &String) -> Vec<Token> {
+pub fn tokenize(text: &String) -> Vec<Token> {
     let mut ret = vec![];
     for line in text.split('\n') {
         let maybe_tok = tokenize_line(line);
