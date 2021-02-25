@@ -47,7 +47,7 @@ fn main() -> Result<(), String>{
                 "compilerun" => {
                     let filename = args.get(2).expect("expected filename in 3rd argument");
                     let file = fs::File::open(filename).expect(&format!("failed to read file: {}", filename)[..]);
-                    let code = assembler::gen_code_read(file);
+                    let code = assembler::gen_code_read(file)?;
                     run(&code);
                 },
                 _ => {

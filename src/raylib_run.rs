@@ -15,7 +15,7 @@ pub fn run(machine: &mut Interpreter) {
 
     while !rl.window_should_close() {
 
-        let (not_done, draw) = machine.interpret_one();
+        let (_not_done, draw) = machine.interpret_one();
 
         if draw {
             let mut d = rl.begin_drawing(&thread);
