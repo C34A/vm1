@@ -42,7 +42,7 @@ pub fn compile(tokens: &Vec<Token>) -> Result<Vec<Instruction>, String> {
                 ret.push(Instruction::None);
             },
             Token::Instr(instr, args) => {
-                ret.push(compile_instr(&instr, &args)?)
+                ret.push(compile_instr(&instr, &args, &label_map)?)
             },
             _ => return Err(format!("ERROR: unexpected token {:?}", token)),
         }
@@ -51,7 +51,7 @@ pub fn compile(tokens: &Vec<Token>) -> Result<Vec<Instruction>, String> {
     Ok(ret)
 }
 
-fn compile_instr(inst_name: &String, args: &Vec<Token>) -> Result<Instruction, String> {
+fn compile_instr(inst_name: &String, args: &Vec<Token>, labels: &HashMap<String, u16>) -> Result<Instruction, String> {
     match &inst_name[..] {
         "nop" => Ok(Instruction::None),
         "set" => {
@@ -103,7 +103,7 @@ fn compile_instr(inst_name: &String, args: &Vec<Token>) -> Result<Instruction, S
                     Ok(Instruction::LoadDeref {addr_reg: reg, data_reg: data_reg})
                 },
                 Err(_) => {
-                    let maybe_addr = try_get_addr_lit(first);
+                    let maybe_addr = try_get_addr_lit(first, labels);
                     match maybe_addr {
                         Ok(addr) => {
                             Ok(Instruction::Load {addr: addr, reg: data_reg})
@@ -124,7 +124,7 @@ fn compile_instr(inst_name: &String, args: &Vec<Token>) -> Result<Instruction, S
                     Ok(Instruction::StoreDeref {addr_reg: reg, data_reg: data_reg})
                 },
                 Err(_) => {
-                    let maybe_addr = try_get_addr_lit(second);
+                    let maybe_addr = try_get_addr_lit(second, labels);
                     match maybe_addr {
                         Ok(addr) => {
                             Ok(Instruction::Store {addr: addr, reg: data_reg})
@@ -137,30 +137,30 @@ fn compile_instr(inst_name: &String, args: &Vec<Token>) -> Result<Instruction, S
             }
         },
         "jmp" => {
-            let addr = try_get_addr_lit(args.get(0))?;
+            let addr = try_get_addr_lit(args.get(0), labels)?;
             Ok(Instruction::Jmp {addr: addr})
         },
         "jeq" => {
             let rega = try_get_reg(args.get(0))?;
             let regb = try_get_reg(args.get(1))?;
-            let addr = try_get_addr_lit(args.get(2))?;
+            let addr = try_get_addr_lit(args.get(2), labels)?;
             Ok(Instruction::Jeq {rega: rega, regb: regb, addr: addr})
         },
         "jgt" => {
             let rega = try_get_reg(args.get(0))?;
             let regb = try_get_reg(args.get(1))?;
-            let addr = try_get_addr_lit(args.get(2))?;
+            let addr = try_get_addr_lit(args.get(2), labels)?;
             Ok(Instruction::Jgt {rega: rega, regb: regb, addr: addr})
         },
         "jlt" => {
             let rega = try_get_reg(args.get(0))?;
             let regb = try_get_reg(args.get(1))?;
-            let addr = try_get_addr_lit(args.get(2))?;
+            let addr = try_get_addr_lit(args.get(2), labels)?;
             Ok(Instruction::Jlt {rega: rega, regb: regb, addr: addr})
         },
         "print" => {
             let first = args.get(0);
-            match try_get_addr_lit(first) {
+            match try_get_addr_lit(first, labels) {
                 Ok(addr) => Ok(Instruction::Print {addr: addr}),
                 Err(_) => match try_get_reg(first) {
                     Ok(reg) => Ok(Instruction::PrintR {reg: reg}),
@@ -211,13 +211,19 @@ fn try_get_lit(maybe_token: Option<&Token>) -> Result<i32, String> {
     }
 }
 
-fn try_get_addr_lit(maybe_token: Option<&Token>) -> Result<u16, String> {
+fn try_get_addr_lit(maybe_token: Option<&Token>, labels: &HashMap<String, u16>) -> Result<u16, String> {
     match maybe_token {
         None => return Err(String::from("ERROR: not enough args, expected address")),
         Some(tok) => {
-            match *tok {
-                Token::AtLiteral(addr) => Ok(addr),
-                _ => return Err(format!("ERROR: expected @register, found {:?}", tok)),
+            match tok {
+                Token::AtLiteral(addr) => Ok(*addr),
+                Token::LabelAddr(name) => {
+                    match labels.get(name) {
+                        Some(addr) => Ok(*addr),
+                        None => Err(format!("ERROR: unrecognized label: {}", name))
+                    }
+                },
+                _ => return Err(format!("ERROR: expected @address, found {:?}", tok)),
             }
         }
     }

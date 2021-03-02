@@ -7,6 +7,7 @@ pub enum Token {
     Reg(u8),
     AtReg(u8),
     AtLiteral(u16),
+    LabelAddr(String),
 }
 
 pub fn tokenize(text: &String) -> Vec<Token> {
@@ -52,13 +53,14 @@ fn tokenize_line(mut line: &str) -> Option<Token> {
     }
 }
 
-fn tokenize_one(mut chunk: &str) -> Result<Token, String> {
+fn tokenize_one(mut chunk: &str) -> Result<Token, String> { // this is serious ass, though works for now
+                                                            // TODO: rewrite this and make it not ass
     let mut is_addr = false;
     if chunk.starts_with('@') {
         is_addr = true;
         chunk = chunk.split_at(1).1;
     }
-    println!("{}",chunk);
+
     if chunk.starts_with('r') { // is register
         chunk = chunk.split_at(1).1;
         println!("{}", chunk);
@@ -70,8 +72,17 @@ fn tokenize_one(mut chunk: &str) -> Result<Token, String> {
     } else {
         match is_addr {
             false => {
-                let val = chunk.parse::<i32>().expect("failed to parse immediate value");
-                Ok(Token::Literal(val))
+                let val = chunk.parse::<i32>();
+                match val {
+                    Ok(val) => Ok(Token::Literal(val)),
+                    Err(e) => {
+                        if chunk.starts_with(':') {
+                            Ok(Token::LabelAddr(String::from(chunk.split_at(1).1)))
+                        } else {
+                            Err(format!("failed to parse token: {} ({})", chunk, e))
+                        }
+                    }
+                }
             },
             true => {
                 let val = chunk.parse::<u16>().expect("failed to parse immediate address value");
