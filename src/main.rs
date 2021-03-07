@@ -3,7 +3,7 @@ use std::fs;
 
 use vm1::isa::*;
 use vm1::interpreter::Interpreter;
-use vm1::raylib_run;
+use vm1::vm1_raylib;
 
 use vm1::assembler;
 
@@ -62,5 +62,5 @@ fn main() -> Result<(), String>{
 
 fn run(code: &Vec<Instruction>) {
     let mut vm = Interpreter::new(code);
-    raylib_run::run(&mut vm);
+    vm1_raylib::run(&mut vm);
 }

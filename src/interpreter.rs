@@ -9,16 +9,16 @@ pub struct Interpreter<'a> {
 }
 
 impl<'a> Interpreter<'a> {
-    pub fn interpret(&mut self) {
+    pub fn interpret(&mut self, rayhandle: &raylib::RaylibHandle) {
         while self.code_ptr < (self.rom.len() as u16) {
-            self.interpret_one();
+            self.interpret_one(rayhandle);
         }
     }
 
     //returns false when end of ROM is reached.
-    pub fn interpret_one(&mut self) -> (bool, bool) {
+    pub fn interpret_one(&mut self, rayhandle: &raylib::RaylibHandle) -> (bool, bool) {
         if self.code_ptr >= self.rom.len() as u16 { return (false, true); }
-        let (new_ptr, draw) = interp_instr(self.rom[self.code_ptr as usize], &mut self.ram, &mut self.registry);
+        let (new_ptr, draw) = interp_instr(self.rom[self.code_ptr as usize], &mut self.ram, &mut self.registry, rayhandle);
         self.code_ptr = match new_ptr {
             None => self.code_ptr + 1,
             Some(addr) => addr,
@@ -26,7 +26,7 @@ impl<'a> Interpreter<'a> {
         (true, draw)
     }
 
-    pub fn new(code: &'a Vec<Instruction>) -> Interpreter {
+    pub fn new(code: &'a Vec<Instruction>) -> Interpreter<'a> {
         Interpreter {
             rom: code,
             ram: Ram::new(),
@@ -40,7 +40,7 @@ impl<'a> Interpreter<'a> {
     }
 }
 
-fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> (Option<u16>, bool) {
+fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry, rayhandle: &raylib::RaylibHandle) -> (Option<u16>, bool) {
     let mut ret: Option<u16> = None;
     let mut draw = false;
     match inst {
@@ -78,11 +78,11 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> (O
             registry.put(rega, Val::from(a_val.contents % b_val.contents));
         },
         Instruction::Load {addr, reg} => {
-            registry.put(reg, ram.load(addr));
+            registry.put(reg, ram.load(addr, rayhandle));
         },
         Instruction::LoadDeref {addr_reg, data_reg} => {
             let add = registry.get(addr_reg);
-            registry.put(data_reg, ram.load(add.contents as u16));
+            registry.put(data_reg, ram.load(add.contents as u16, rayhandle));
         },
         Instruction::Store {reg, addr} => {
             ram.store(addr, registry.get(reg));
@@ -117,7 +117,7 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> (O
             }
         },
         Instruction::Print {addr} => {
-            println!("{}", ram.load(addr).contents);
+            println!("{}", ram.load(addr, rayhandle).contents);
         },
         Instruction::Set {reg, val} => {
             registry.put(reg, Val::from(val));
