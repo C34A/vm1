@@ -5,11 +5,12 @@ A very minimal virtual machine, inspired by Apple 2 era computers, intended for 
 - simple instructionset (i am lazy)
 - built-in assembler
 - windowed output
+- subroutines
 
 ## todo
 - binary i/o
-- subroutines
 - keyboard input system
+- more inputs (time, ??)
 - ??
 
 ## example
