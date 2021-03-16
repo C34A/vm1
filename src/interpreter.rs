@@ -25,11 +25,13 @@ impl<'a> Interpreter<'a> {
     }
 
     pub fn new(code: &'a Vec<Instruction>) -> Interpreter {
+        let mut stack = CallStack::new();
+        stack.push_addr(0); // start at addr 0
         Interpreter {
             rom: code,
             ram: Ram::new(),
             registry: Registry::new(),
-            stack: CallStack::new(),
+            stack: stack,
         }
     }
 
