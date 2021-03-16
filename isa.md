@@ -23,7 +23,7 @@ caddr: a 15 bit code address. differentiated since code is stored in ROM by top 
 | 14 | jgt reg reg caddr | jump if reg > reg |
 | 15  | jlt reg reg caddr | jump if reg < reg |
 | 16 | jsr caddr | jump to code address, push the current address to the stack |
-| 17 | rsr | return to the last address on the stack + 1 |
+| 17 | jrtn | return to the last address on the stack + 1 |
 | 18 | print addr | debug print? |
 | 19 | print reg | debug print |
 | 20 | set reg val | set a register to a literal value |
