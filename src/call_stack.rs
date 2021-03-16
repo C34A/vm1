@@ -4,8 +4,9 @@ pub struct CallStack {
 
 pub enum CallStackCommand {
     Increment,
-    Jump,
-    JumpSubroutine,
+    Jump(u16),
+    JumpSubroutine(u16),
+    ReturnSubroutine,
 }
 
 impl CallStack {
@@ -24,10 +25,22 @@ impl CallStack {
     }
 
     pub fn handle_cmd(&mut self, cmd: CallStackCommand) {
-        let current_r = self.get_current_addr_ref();
+        let current = self.stack.pop().expect("Unable to get current address because stack is empty!");
         match cmd {
             CallStackCommand::Increment => {
-                current_r = 
+                self.stack.push(current + 1); // push the next address to the stack
+            },
+            CallStackCommand::Jump(addr) => {
+                self.stack.push(addr); // the current address remains popped and the new address replaces it
+            },
+            CallStackCommand::JumpSubroutine(addr) => {
+                self.stack.push(current + 1);
+                self.stack.push(addr);
+            },
+            CallStackCommand::ReturnSubroutine => {
+                (); 
+                // current addr is already popped, so doing nothing leaves the previous
+                // jsr address at the top of the stack
             }
         }
     }
