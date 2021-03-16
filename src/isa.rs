@@ -20,7 +20,7 @@ pub enum Instruction {
     Jgt {rega: u8, regb: u8, addr: u16},
     Jlt {rega: u8, regb: u8, addr: u16},
     Jsr {caddr: u16},
-    Rsr,
+    Jrtn,
     Print {addr: u16},
     PrintR {reg: u8},
     Draw,

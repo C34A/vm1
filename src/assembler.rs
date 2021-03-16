@@ -162,8 +162,8 @@ fn compile_instr(inst_name: &String, args: &Vec<Token>, labels: &HashMap<String,
             let addr = try_get_addr_lit(args.get(0), labels)?;
             Ok(Instruction::Jsr {caddr: addr})
         },
-        "rsr" => {
-            Ok(Instruction::Rsr)
+        "jrtn" => {
+            Ok(Instruction::Jrtn)
         },
         "print" => {
             let first = args.get(0);

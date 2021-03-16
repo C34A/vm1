@@ -133,7 +133,7 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> (C
             }
         },
         Instruction::Jsr {caddr} => CallStackCommand::JumpSubroutine(caddr),
-        Instruction::Rsr => CallStackCommand::ReturnSubroutine,
+        Instruction::Jrtn => CallStackCommand::ReturnSubroutine,
         Instruction::Print {addr} => {
             println!("{}", ram.load(addr).contents);
             CallStackCommand::Increment
