@@ -36,7 +36,7 @@ program:
     set r1 39
     set r2 39
     set r3 42 ; '*'
-    jsr :set_screen_char ; draw + at 39, 39
+    jsr :set_screen_char ; draw * at 39, 39
     draw
 
     set r1 0
