@@ -63,7 +63,7 @@ fn tokenize_one(mut chunk: &str) -> Result<Token, String> { // this is serious a
 
     if chunk.starts_with('r') { // is register
         chunk = chunk.split_at(1).1;
-        println!("{}", chunk);
+        // println!("{}", chunk);
         let idx = chunk.parse::<u8>().expect("failed to parse register");
         match is_addr {
             true => Ok(Token::AtReg(idx)),
