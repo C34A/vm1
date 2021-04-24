@@ -11,5 +11,5 @@ set r0 65
 test:
 jlt r1 r2 :loop ; if at end, draw and reset drawing pointer
 draw
-set r1 63935
+set r1 0xF9BF ; back to start
 jmp :loop

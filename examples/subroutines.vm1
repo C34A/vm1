@@ -1,0 +1,52 @@
+    jmp :program
+
+; set_screen_char reg1: x, reg2: y, reg3: data, uses r4 -- draw data at screen coordinates (x, y) where (0, 0) is the bottom left
+set_screen_char:
+    ; (0, 0) is FFD7 (FFFF - 40)
+    ; subtract 40 for each y
+    ; add x
+    
+    set r4 0xFFD7 ; 0,0
+    add r1 r4 ; +x
+
+    set r4 40
+    mult r2 r4
+    sub r1 r2 ; -40y
+
+    store r3 @r1 ; store
+
+    ; optional: clean up
+    set r1 0
+    set r2 0
+    set r3 0
+    set r4 0
+    ; return
+    jrtn
+
+program:
+
+    draw
+
+    set r1 0
+    set r2 0
+    set r3 43 ; '+'
+    jsr :set_screen_char ; draw + at 0, 0
+    draw
+
+    set r1 39
+    set r2 39
+    set r3 42 ; '*'
+    jsr :set_screen_char ; draw * at 39, 39
+    draw
+
+    set r1 0
+    set r2 39
+    set r3 45 ; '-'
+    jsr :set_screen_char ; draw + at 0, 39
+    draw
+
+    set r1 39
+    set r2 0
+    set r3 47 ; '/'
+    jsr :set_screen_char ; draw / at 39, 0
+    draw

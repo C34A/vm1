@@ -12,8 +12,10 @@ pub enum Token {
 
 pub fn tokenize(text: &String) -> Vec<Token> {
     let mut ret = vec![];
+    let mut line_idx = 0;
     for line in text.split('\n') {
-        let maybe_tok = tokenize_line(line);
+        line_idx += 1;
+        let maybe_tok = tokenize_line(line, line_idx);
         match maybe_tok {
             None => (),
             Some(tok) => ret.push(tok),
@@ -22,7 +24,7 @@ pub fn tokenize(text: &String) -> Vec<Token> {
     ret
 }
 
-fn tokenize_line(mut line: &str) -> Option<Token> {
+fn tokenize_line(mut line: &str, idx: i32) -> Option<Token> {
     match line.find(';') {
         None => (),
         Some(idx) => {
@@ -41,7 +43,7 @@ fn tokenize_line(mut line: &str) -> Option<Token> {
             for thing in lsplit {
                 match tokenize_one(thing) {
                     Err(e) => {
-                        println!("failed to parse: {}\n{}", thing, e);
+                        println!("line {} - failed to parse: {}\n{}", idx, thing, e);
                     }, 
                     Ok(tok) => {
                         args.push(tok);

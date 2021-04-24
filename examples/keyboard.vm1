@@ -1,8 +1,7 @@
 
-    set r1 63872 ; start of keyboard
-    set r2 63934 ; end of keyboard
-    set r3 63935 ; start of screen
-    ; set r3 65535 ; end of screen
+    set r1 0xF980 ; start of keyboard
+    set r2 0xF9BE ; end of keyboard
+    set r3 0xF9BF ; start of screen
     set r0 0
 loop:
     load @r1 r0 ; get this key
@@ -13,7 +12,7 @@ loop:
     inc r1 1 ; next key
     inc r3 1 ; next screen char
     jlt r1 r2 :loop ; keep going
-    set r1 63872 ; reset to first key
-    set r3 63935 ; reset to first framebuffer char
+    set r1 0xF980 ; reset to first key
+    set r3 0xF9BF ; reset to first framebuffer char
     draw
     jmp :loop
