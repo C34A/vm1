@@ -10,16 +10,21 @@ pub struct Interpreter<'a> {
 }
 
 impl<'a> Interpreter<'a> {
-    pub fn interpret(&mut self) {
+    pub fn interpret(&mut self, rayhandle: &raylib::RaylibHandle) {
         while self.stack.get_current_addr() < (self.rom.len() as u16) {
-            self.interpret_one();
+            self.interpret_one(rayhandle);
         }
     }
 
     //returns false when end of ROM is reached.
-    pub fn interpret_one(&mut self) -> (bool, bool) {
+    pub fn interpret_one(&mut self, rayhandle: &raylib::RaylibHandle) -> (bool, bool) {
         if self.stack.get_current_addr() >= self.rom.len() as u16 { return (false, true); }
-        let (stack_op, draw) = interp_instr(self.rom[self.stack.get_current_addr() as usize], &mut self.ram, &mut self.registry);
+        let (stack_op, draw) = interp_instr(
+            self.rom[self.stack.get_current_addr() as usize]
+            , &mut self.ram
+            , &mut self.registry
+            , rayhandle
+            );
         self.stack.handle_cmd(stack_op);
         (true, draw)
     }
@@ -40,7 +45,8 @@ impl<'a> Interpreter<'a> {
     }
 }
 
-fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> (CallStackCommand, bool) {
+fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry, rayhandle: &raylib::RaylibHandle) -> (CallStackCommand, bool) {
+    let mut ret: Option<u16> = None;
     let mut draw = false;
     let stack_op = match inst {
         Instruction::Add {rega, regb} => {
@@ -84,12 +90,12 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> (C
             CallStackCommand::Increment
         },
         Instruction::Load {addr, reg} => {
-            registry.put(reg, ram.load(addr));
+            registry.put(reg, ram.load(addr, rayhandle));
             CallStackCommand::Increment
         },
         Instruction::LoadDeref {addr_reg, data_reg} => {
             let add = registry.get(addr_reg);
-            registry.put(data_reg, ram.load(add.contents as u16));
+            registry.put(data_reg, ram.load(add.contents as u16, rayhandle));
             CallStackCommand::Increment
         },
         Instruction::Store {reg, addr} => {
@@ -135,7 +141,7 @@ fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry) -> (C
         Instruction::Jsr {caddr} => CallStackCommand::JumpSubroutine(caddr),
         Instruction::Jrtn => CallStackCommand::ReturnSubroutine,
         Instruction::Print {addr} => {
-            println!("{}", ram.load(addr).contents);
+            println!("{}", ram.load(addr, rayhandle).contents);
             CallStackCommand::Increment
         },
         Instruction::Set {reg, val} => {

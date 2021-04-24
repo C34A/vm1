@@ -2,14 +2,14 @@
 
 ; set_screen_char reg1: x, reg2: y, reg3: data, uses r4 -- draw data at screen coordinates (x, y) where (0, 0) is the bottom left
 set_screen_char:
-    ; (0, 0) is 32727 (32767 - 40)
+    ; (0, 0) is FFD7 (FFFF - 40)
     ; subtract 40 for each y
     ; add x
     
-    set r4 32727 ; 0,0
+    set r4 0xFFD7 ; 0,0
     add r1 r4 ; +x
 
-    set r4 40 
+    set r4 40
     mult r2 r4
     sub r1 r2 ; -40y
 

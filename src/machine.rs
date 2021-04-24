@@ -48,13 +48,27 @@ impl Ram {
         }
     }
 
-    pub fn load(&self, addr: u16) -> Val {
-        self.data[&addr]
+    pub fn load(&self, addr: u16, rayhandle: &raylib::RaylibHandle) -> Val {
+        if addr >= 0xF980 {
+            if addr >= 0xF9BF {
+                return Val::from(self.framebuffer[(addr - 0xF9BF) as usize]);
+            } else {
+                let (down, justchanged) = crate::vm1_raylib::keyboard::get_key_status((addr - 0xF980) as u8, rayhandle);
+                return Val::from((justchanged as i32 * 2) + (down as i32 * 2)) // bottom bit is if the key is down, second from bottom is if just changed
+            }
+        }
+        match self.data.get(&addr) {
+            Some(data) => *data,
+            None => Val::from(0),
+        }
     }
 
     pub fn store(&mut self, addr: u16, val: Val) {
-        if addr >= 31167 && addr < 32767 {
-            self.framebuffer[(addr - 31167) as usize] = val.contents;
+        if addr >= 0xF980 && addr <= 0xF9BE {
+            return; // don't do anything; this is the keyboard
+        }
+        if addr >= 0xF9BF { // write to screen framebuffer
+            self.framebuffer[(addr - 0xF9BF) as usize] = val.contents;
         }
         self.data.insert(addr, val);
     }

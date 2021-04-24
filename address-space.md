@@ -2,6 +2,5 @@ addresses are 16 bits
 
 | range | description |
 | - | - |
-| F9BD | keyboard key |
-| F9BE | keyboard modifiers |
+| F980-F9BE | keyboard keys |
 | F9BF-FFFF | screen |
