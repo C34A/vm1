@@ -17,8 +17,8 @@ A very minimal virtual machine, inspired by Apple 2 era computers, intended for 
 from `examples/alphabet.vm1`
 ```
 set r0 65 ; 'A'
-set r1 31167 ; screen start addr
-set r2 32767 ; screen end + 1
+set r1 0xF9BF ; screen start addr
+set r2 0xFFFF ; screen end + 1
 set r4 91 ; 'Z' + 1
 loop:
 store r0 @r1 ; write to "pixel"
@@ -29,7 +29,7 @@ set r0 65
 test:
 jlt r1 r2 :loop ; if at end, draw and reset drawing pointer
 draw
-set r1 31167
+set r1 0xF9BF ; back to start
 jmp :loop
 ```
 
