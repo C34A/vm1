@@ -6,10 +6,10 @@ A very minimal virtual machine, inspired by Apple 2 era computers, intended for 
 - built-in assembler
 - windowed output
 - subroutines
+- keyboard input
 
 ## todo
-- binary i/o
-- keyboard input system
+- run/save to file
 - more inputs (time, ??)
 - ??
 
