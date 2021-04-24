@@ -109,7 +109,7 @@ fn compile_instr(inst_name: &String, args: &Vec<Token>, labels: &HashMap<String,
                             Ok(Instruction::Load {addr: addr, reg: data_reg})
                         }
                         Err(_) => {
-                            Err(String::from("ERROR: load - expected address or @register"))
+                            Err(format!("ERROR: load - expected address or @register\ngot: {:?}", args))
                         }
                     }
                 }
