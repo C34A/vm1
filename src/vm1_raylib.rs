@@ -13,7 +13,7 @@ pub fn run(machine: &mut Interpreter) {
     // let font = rl.load_font_ex(&thread, "res/fonts/dogica.ttf", 22, FontLoadEx::Default(1000)).expect("couldn't load font");
     let font = rl.load_font_ex(&thread, "res/fonts/dogica.ttf", 16, FontLoadEx::Default(2000)).expect("couldn't get font");
     
-    rl.set_target_fps(144);
+    rl.set_target_fps(120);
 
     while !rl.window_should_close() {
 

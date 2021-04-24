@@ -72,14 +72,21 @@ fn tokenize_one(mut chunk: &str) -> Result<Token, String> { // this is serious a
     } else {
         match is_addr {
             false => {
-                let val = chunk.parse::<i32>();
-                match val {
-                    Ok(val) => Ok(Token::Literal(val)),
-                    Err(e) => {
-                        if chunk.starts_with(':') {
-                            Ok(Token::LabelAddr(String::from(chunk.split_at(1).1)))
-                        } else {
-                            Err(format!("failed to parse token: {} ({})", chunk, e))
+                match &chunk[0..1] {
+                    ":" => {
+                        Ok(Token::LabelAddr(String::from(chunk.split_at(1).1))) // split to remove ':', use rest
+                    },
+                    _ => {
+                        if chunk.starts_with("0x") {
+                            match u16::from_str_radix(&chunk[2..], 16) {
+                                Ok(v) => Ok(Token::Literal(v as i32)),
+                                Err(e) => Err(format!("failed to parse hex: {} ({})", chunk, e)),
+                            }
+                        } else{
+                            match chunk.parse::<i32>() {
+                                Ok(v) => Ok(Token::Literal(v)),
+                                Err(e) => Err(format!("failed to parse integer literal: {} ({})", chunk, e)),
+                            }
                         }
                     }
                 }
