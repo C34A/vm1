@@ -16,7 +16,7 @@ set_screen_char_next1:
     jlt r2 r4 :set_screen_char_next2
     jrtn
 set_screen_char_next2:
-    set r4 0
+    set r4 -1
     jgt r1 r4 :set_screen_char_next3
     jrtn
 set_screen_char_next3:
@@ -51,6 +51,12 @@ draw_player:
     draw
     jrtn
 
+erase_old_player:
+    load @0x0000 r1
+    load @0x0001 r2
+    set r3 0
+    jsr :set_screen_char
+    jrtn
 
 ; 0x0000: player x
 ; 0x0001: player y
@@ -60,6 +66,8 @@ program:
     store r0 @0
     store r0 @1
 loop:
+    jsr :erase_old_player
+
     set r10 1
     load @0xF9BD r0 ; right arrow
     jlt r0 r10 :next1
