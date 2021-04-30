@@ -1,0 +1,97 @@
+    jmp :program
+
+    ; from subroutines example
+    ; set_screen_char reg1: x, reg2: y, reg3: data, uses r4 -- draw data at screen coordinates (x, y) where (0, 0) is the bottom left
+set_screen_char:
+    ; (0, 0) is FFD7 (FFFF - 40)
+    ; subtract 40 for each y
+    ; add x
+
+    ; check coordinates to not write into random memory
+
+    set r4 40
+    jlt r1 r4 :set_screen_char_next1
+    jrtn
+set_screen_char_next1:
+    jlt r2 r4 :set_screen_char_next2
+    jrtn
+set_screen_char_next2:
+    set r4 -1
+    jgt r1 r4 :set_screen_char_next3
+    jrtn
+set_screen_char_next3:
+    jgt r2 r4 :set_screen_char_all_ok
+    jrtn
+set_screen_char_all_ok:
+
+    ; calculate address
+
+    set r4 0xFFD7 ; 0,0
+    add r1 r4 ; +x
+
+    set r4 40
+    mult r2 r4
+    sub r1 r2 ; -40y
+
+    store r3 @r1 ; store
+
+    ; optional: clean up
+    set r1 0
+    set r2 0
+    set r3 0
+    set r4 0
+    ; return
+    jrtn
+
+draw_player:
+    load @0x0000 r1
+    load @0x0001 r2
+    set r3 42
+    jsr :set_screen_char
+    draw
+    jrtn
+
+erase_old_player:
+    load @0x0000 r1
+    load @0x0001 r2
+    set r3 0
+    jsr :set_screen_char
+    jrtn
+
+; 0x0000: player x
+; 0x0001: player y
+
+program:
+    set r0 10
+    store r0 @0
+    store r0 @1
+loop:
+    jsr :erase_old_player
+
+    set r10 1
+    load @0xF9BD r0 ; right arrow
+    jlt r0 r10 :next1
+    load @0x0000 r0
+    inc r0 1
+    store r0 @0x0000
+next1:
+    load @0xF9BC r0 ; left arrow
+    jlt r0 r10 :next2
+    load @0x0000 r0
+    dec r0 1
+    store r0 @0x0000
+next2:
+    load @0xF9BB r0 ; down arrow
+    jlt r0 r10 :next3
+    load @0x0001 r0
+    dec r0 1
+    store r0 @0x0001
+next3:
+    load @0xF9BA r0 ; up arrow
+    jlt r0 r10 :next4
+    load @0x0001 r0
+    inc r0 1
+    store r0 @0x0001
+next4:
+    jsr :draw_player
+    jmp :loop
