@@ -94,8 +94,14 @@ fn tokenize_one(mut chunk: &str) -> Result<Token, String> { // this is serious a
                 }
             },
             true => {
-                let val = chunk.parse::<u16>().expect("failed to parse immediate address value");
-                Ok(Token::AtLiteral(val))
+                if chunk.starts_with("0x") {
+                    match u16::from_str_radix(&chunk[2..], 16) {
+                        Ok(v) => Ok(Token::AtLiteral(v)),
+                        Err(e) => Err(format!("failed to parse hex address: {} ({})", chunk, e)),
+                    }
+                } else {
+                    Ok(Token::AtLiteral(chunk.parse::<u16>().expect("failed to parse immediate address value")))
+                }
             }
         }
     }
