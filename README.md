@@ -9,7 +9,7 @@ A very minimal virtual machine, inspired by Apple 2 era computers, intended for 
 - keyboard input
 
 ## todo
-- run/save to file
+- run from/save to file
 - more inputs (time, ??)
 - ??
 
