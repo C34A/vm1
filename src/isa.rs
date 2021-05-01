@@ -1,6 +1,6 @@
+use serde::{Serialize, Deserialize};
 
-
-#[derive(Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub enum Instruction {
     None,
     Set {reg: u8, val: i32},

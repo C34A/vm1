@@ -46,6 +46,6 @@ impl CallStack {
     }
 
     pub fn push_addr(&mut self, addr: u16) {
-        self.stack.push(0);
+        self.stack.push(addr);
     }
 }
