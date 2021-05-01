@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-// use std::io::Write;
+use std::io::{Read, Write};
 
 use vm1::isa::*;
 use vm1::interpreter::Interpreter;
@@ -83,6 +83,14 @@ fn main() {
                         }
                     };
                 },
+                "exec" => {
+                    let filename = args.get(2).expect("expected filename in 3rd argument");
+                    let mut file = fs::File::open(filename).expect(&format!("failed to open file: {}", filename)[..]);
+                    let mut binary: Vec<u8> = vec!();
+                    file.read_to_end(&mut binary).expect("failed to read from file");
+                    let code: Vec<Instruction> = bincode::deserialize(&binary).expect("failed to deserialize data!");
+                    run(&code);
+                }
                 _ => {
                     println!("unrecognized argument: {}", s);
                     return;
@@ -98,6 +106,6 @@ fn run(code: &Vec<Instruction>) {
 }
 
 fn compile(filename: &str) -> Result<Vec<Instruction>, String> {
-    let file = fs::File::open(filename).expect(&format!("failed to read file: {}", filename)[..]);
+    let file = fs::File::open(filename).expect(&format!("failed to open file: {}", filename)[..]);
     assembler::gen_code_read(file)
 }
