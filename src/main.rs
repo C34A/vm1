@@ -18,20 +18,28 @@ fn main() {
         },
         Some(s) => {
             match &s[..] {
+                "run" => { // try to exec if ends with .bm1, else try to compile and run
+                    let filename = args.get(2).expect("expected filename in 3rd argument");
+                    let pos = filename.rfind(".");
+                    let is_compiled = match pos {
+                        Some(idx) => {
+                            let ext = filename.split_at(idx).1;
+                            ext == "bm1" // is probably a compiled binary
+                        },
+                        None => {
+                            // unknown
+                            false
+                        },
+                    };
+                    if is_compiled {
+                        exec_compiled(filename);
+                    } else {
+                        compilerun(filename);
+                    }
+                },
                 "compilerun" => {
                     let filename = args.get(2).expect("expected filename in 3rd argument");
-                    let code = compile(filename);
-                    match code {
-                        Ok(result) => {
-                            // good to go!
-                            run(&result)
-                        },
-                        Err(e) => {
-                            // something went wrong...
-                            println!("{}", e);
-                            return;
-                        }
-                    };
+                    compilerun(filename);
                 },
                 "compileprint" => {
                     let filename = args.get(2).expect("expected filename in 3rd argument");
@@ -85,11 +93,7 @@ fn main() {
                 },
                 "exec" => {
                     let filename = args.get(2).expect("expected filename in 3rd argument");
-                    let mut file = fs::File::open(filename).expect(&format!("failed to open file: {}", filename)[..]);
-                    let mut binary: Vec<u8> = vec!();
-                    file.read_to_end(&mut binary).expect("failed to read from file");
-                    let code: Vec<Instruction> = bincode::deserialize(&binary).expect("failed to deserialize data!");
-                    run(&code);
+                    exec_compiled(filename);
                 }
                 _ => {
                     println!("unrecognized argument: {}", s);
@@ -98,6 +102,29 @@ fn main() {
             }
         }
     }
+}
+
+fn exec_compiled(filename: &String) {
+    let mut file = fs::File::open(filename).expect(&format!("failed to open file: {}", filename)[..]);
+    let mut binary: Vec<u8> = vec!();
+    file.read_to_end(&mut binary).expect("failed to read from file");
+    let code: Vec<Instruction> = bincode::deserialize(&binary).expect("failed to deserialize data!");
+    run(&code);
+}
+
+fn compilerun(filename: &String) {
+    let code = compile(filename);
+    match code {
+        Ok(result) => {
+            // good to go!
+            run(&result)
+        },
+        Err(e) => {
+            // something went wrong...
+            println!("{}", e);
+            return;
+        }
+    };
 }
 
 fn run(code: &Vec<Instruction>) {
