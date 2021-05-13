@@ -24,7 +24,7 @@ fn main() {
                     let is_compiled = match pos {
                         Some(idx) => {
                             let ext = filename.split_at(idx).1;
-                            ext == "bm1" // is probably a compiled binary
+                            ext == ".bm1" // is probably a compiled binary
                         },
                         None => {
                             // unknown
@@ -32,8 +32,10 @@ fn main() {
                         },
                     };
                     if is_compiled {
+                        println!("{} appears to be compiled, trying to exec", filename);
                         exec_compiled(filename);
                     } else {
+                        println!("{} doesn't appear to be compiled, trying to read and exec", filename);
                         compilerun(filename);
                     }
                 },
