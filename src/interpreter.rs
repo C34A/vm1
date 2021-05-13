@@ -46,7 +46,6 @@ impl<'a> Interpreter<'a> {
 }
 
 fn interp_instr(inst: Instruction, ram: &mut Ram, registry: &mut Registry, rayhandle: &raylib::RaylibHandle) -> (CallStackCommand, bool) {
-    let mut ret: Option<u16> = None;
     let mut draw = false;
     let stack_op = match inst {
         Instruction::Add {rega, regb} => {

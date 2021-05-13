@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 raylib = "3.5"
+serde = { version = "1.0.125", features = ["derive"] }
+bincode = "1.3"
