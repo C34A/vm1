@@ -7,11 +7,27 @@ A very minimal virtual machine, inspired by Apple 2 era computers, intended for 
 - windowed output
 - subroutines
 - keyboard input
+- run from/save to file
 
 ## todo
-- run from/save to file
 - more inputs (time, ??)
 - ??
+- i'm honestly not sure
+
+## usage
+
+Either `cargo build --release` and use the binary in `target/release/vm1` or just use `cargo run`
+
+```
+$ vm1 run ./examples/game.vm1 # compile and run from source file
+$ vm1 compile ./examples/game.vm1 # compile and write to "game.bm1"
+$ vm1 run ./game.bm1 # execute an existing binary
+```
+Note that the `run` directive will use the file extension to determine if it is a binary. One can also give a more specific directive:
+```
+$ vm1 compilerun ./exampes/game.vm1 # compile and run from text file
+$ vm1 exec ./game.bm1 # run from binary
+```
 
 ## example
 from `examples/alphabet.vm1`
