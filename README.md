@@ -2,17 +2,12 @@
 A very minimal virtual machine, inspired by Apple 2 era computers, intended for retro game programming. Very WIP.
 
 ## features
-- simple instructionset (i am lazy)
+- simple instructionset
 - built-in assembler
 - windowed output
 - subroutines
 - keyboard input
 - run from/save to file
-
-## todo
-- more inputs (time, ??)
-- ??
-- i'm honestly not sure
 
 ## usage
 
